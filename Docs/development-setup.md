@@ -2,7 +2,7 @@
 
 This guide walks you through adding Agility to an existing Unreal Engine project so you can build with the plugin enabled and follow the tutorials in [`tutorials/`](./tutorials/).
 
-Agility is **source-only** (no binary `.uasset` content) and ships as a standalone git repo. The recommended integration is to clone the plugin once on your machine and **symlink** it into each UE project that wants to use it — that way a single plugin checkout serves any number of projects, and your projects stay clean of plugin source.
+Agility is **mostly source** — C++, HLSL, and a minimal bundled `Content/` (raw video files plus a small handful of base-material `.uasset`s that C++ wraps at runtime) — and ships as a standalone git repo. The recommended integration is to clone the plugin once on your machine and **symlink** it into each UE project that wants to use it — that way a single plugin checkout serves any number of projects, and your projects stay clean of plugin source.
 
 ## Prerequisites
 

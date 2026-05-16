@@ -1,6 +1,6 @@
 # Tutorials
 
-Interactive tutorials you walk through with `claude-code`. Open one, hand it to Claude, and start asking questions.
+The tutorials are the **public face of Agility's research** — they let any curious reader experience the human + AI build loop firsthand, on their own machine, in their own UE project. Each one is an end-to-end build you walk through with `claude-code`: open the markdown, hand it to Claude, and start asking questions.
 
 Tutorials assume you've integrated the Agility plugin into a UE project — see [`../development-setup.md`](../development-setup.md) if you haven't yet.
 

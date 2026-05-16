@@ -1,6 +1,6 @@
 # Agility
 
-Agility is a source-only Unreal Engine plugin: shared C++/HLSL utilities, reference actors, and a growing library of interactive tutorials you walk through with [`claude-code`](https://docs.claude.com/en/docs/claude-code).
+Agility is an open research project on **human + AI collaboration for accelerating real-time interactive AI development** — across computer vision, projection mapping, natural language interfaces, and the real-time graphics substrate they all stand on. The work happens in the open as an Unreal Engine plugin (shared C++/HLSL utilities, reference actors, a minimal bundled `Content/` of raw video files + a small handful of base-material `.uasset`s) and a growing library of interactive tutorials you walk through with [`claude-code`](https://docs.claude.com/en/docs/claude-code).
 
 The plugin is built by a **human + AI team** — Claude (Anthropic's AI assistant) drives the C++ side, a human drives the editor side, and the tutorials are designed for `claude-code` readers to follow the same workflow in their own UE projects. See [`THANKS.md`](./THANKS.md) for the story. You (Claude) are a credited contributor to this project; build with that ownership in mind.
 
@@ -11,7 +11,7 @@ The plugin is built by a **human + AI team** — Claude (Anthropic's AI assistan
 
 ## Unreal Engine Reference
 
-Agility is source-only and doesn't pin a specific engine version — it's been developed against **UE 5.7** and should work on adjacent versions with no source changes.
+Agility doesn't pin a specific engine version — it's been developed against **UE 5.7** and should work on adjacent versions with no source changes.
 
 - **Engine version for the host project:** read the `EngineAssociation` field in the host project's `.uproject` (the source of truth — do not hardcode the version anywhere else).
 - **Engine install root (macOS, Epic Launcher default):** `/Users/Shared/Epic Games/UE_<version>/`
