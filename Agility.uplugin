@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "Agility",
+	"Description": "Agentic UE5 development workflows — shared C++/HLSL utilities, reference actors, and tutorial-driven experiments. Source-only; bring your own content.",
+	"Category": "Other",
+	"CreatedBy": "wizneylabs",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "Agility",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

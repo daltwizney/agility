@@ -1,0 +1,35 @@
+# IDE / OS state
+.DS_Store
+.idea/
+.vs/
+.vsconfig
+
+# Generated IDE project files (regenerated per machine, embed absolute paths)
+*.xcodeproj
+*.xcworkspace
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# UBT / UHT build outputs
+Binaries/
+Intermediate/
+
+# Compiled artifacts
+*.o
+*.obj
+*.slo
+*.lo
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.pch
+*.gch
+*.exe
+*.out
+*.app

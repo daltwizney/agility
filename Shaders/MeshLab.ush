@@ -1,0 +1,237 @@
+// MeshLab.ush — HLSL pipeline entry points for the MeshLab procedural-mesh experiment.
+//
+// The Agility plugin's StartupModule mounts this directory at virtual path
+// /Plugin/Agility/. Reference from a material Custom node by adding
+// "/Plugin/Agility/MeshLab.ush" to the node's Include File Paths array — NOT
+// in the Code field (that triggers a wrapper-function "function definition is
+// not allowed here" error). See Docs/tutorials/proceduralmesh/00-scope.md for
+// the full pipeline story.
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+// Most kollie shaders author their output as display-encoded values (the classic
+// non-color-managed OpenGL look). UE's Emissive expects scene-linear values, so
+// we gamma-decode before output. The framebuffer's sRGB encode then "cancels"
+// this back to the intended display values. Wrap every kollie port's return
+// value in this on the way out.
+float3 MeshLab_DisplayToLinear(float3 InColor)
+{
+	return pow(InColor, 2.2);
+}
+
+// Vertex-color pass-through (display-space treatment). Used as the first
+// end-to-end validation of the HLSL pipeline + per-vertex color round-trip.
+float3 MeshLab_PassThroughColor(float3 InColor)
+{
+	return MeshLab_DisplayToLinear(InColor);
+}
+
+// Translation table used for kollie unlit ports (applies to every port below):
+//   vec2/vec3/vec4              →  float2/float3/float4
+//   mix(a, b, t)                →  lerp(a, b, t)
+//   fract(x)                    →  frac(x)              ← HLSL spelling
+//   getUV0()                    →  UV input             (wire from a TexCoord node)
+//   materialParams.time         →  Time input           (wire from a Time node)
+//   getAspectRatio()            →  omitted              (square-quad assumption;
+//                                                        re-add as a scalar input for
+//                                                        non-square geometry)
+//   material.baseColor = vec4() →  return float3()      (Custom node feeds Emissive)
+//   highp qualifier             →  omitted              (HLSL uses different precision)
+
+// =============================================================================
+// Plasma — ported from kollie's plasma.mat (Filament .mat, unlit)
+// =============================================================================
+float3 MeshLab_Plasma(float2 UV, float Time)
+{
+	float2 p = UV * 2.0 - 1.0;
+
+	float v1 = sin(p.x * 5.0 + Time);
+	float v2 = sin(5.0 * (p.x * sin(Time * 0.5) + p.y * cos(Time * 0.3)) + Time);
+	float v3 = sin(sqrt(50.0 * (p.x * p.x + p.y * p.y) + 1.0) + Time);
+
+	float cx = p.x + 0.5 * sin(Time * 0.3);
+	float cy = p.y + 0.5 * cos(Time * 0.5);
+	float v4 = sin(sqrt(100.0 * (cx * cx + cy * cy) + 1.0) + Time);
+
+	float v = (v1 + v2 + v3 + v4) * 0.25;
+
+	float3 col1 = float3(0.3, 0.0, 0.8);
+	float3 col2 = float3(0.0, 0.9, 0.9);
+	float3 col3 = float3(1.0, 0.0, 1.0);
+	float3 col4 = float3(0.0, 0.4, 0.9);
+
+	float3 col = lerp(col1, col2, sin(v * 3.14159) * 0.5 + 0.5);
+	col        = lerp(col, col3, sin(v * 3.14159 + 2.094) * 0.5 + 0.5);
+	col       += col4 * pow(abs(sin(v * 6.28318)), 4.0) * 0.3;
+
+	col *= 1.1;
+	col *= 1.0 - length(p) * 0.15;
+
+	return clamp(col, 0.0, 1.0);
+}
+
+// =============================================================================
+// Liquid — ported from kollie's liquid.mat
+// fBm noise + animated metaballs + iridescent palette + caustics.
+// Helpers (Hash / Noise / FBM / Metaball) are reusable across ports.
+// =============================================================================
+
+float MeshLab_Liquid_Hash(float2 p)
+{
+	return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453);
+}
+
+float MeshLab_Liquid_Noise(float2 p)
+{
+	float2 i = floor(p);
+	float2 f = frac(p);
+	f = f * f * (3.0 - 2.0 * f);  // smoothstep curve
+
+	float a = MeshLab_Liquid_Hash(i);
+	float b = MeshLab_Liquid_Hash(i + float2(1.0, 0.0));
+	float c = MeshLab_Liquid_Hash(i + float2(0.0, 1.0));
+	float d = MeshLab_Liquid_Hash(i + float2(1.0, 1.0));
+
+	return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float MeshLab_Liquid_FBM(float2 p)
+{
+	float value = 0.0;
+	float amplitude = 0.5;
+	float frequency = 1.0;
+	for (int i = 0; i < 5; ++i)
+	{
+		value += amplitude * MeshLab_Liquid_Noise(p * frequency);
+		frequency *= 2.0;
+		amplitude *= 0.5;
+	}
+	return value;
+}
+
+float MeshLab_Liquid_Metaball(float2 p, float2 center, float radius)
+{
+	float d = length(p - center);
+	return radius / (d * d + 0.001);
+}
+
+float3 MeshLab_Liquid(float2 UV, float Time)
+{
+	float2 p = UV * 2.0 - 1.0;
+
+	// Layered flow displacement
+	float2 flow = float2(
+		MeshLab_Liquid_FBM(p * 2.0 + Time * 0.3),
+		MeshLab_Liquid_FBM(p * 2.0 + float2(5.2, 1.3) + Time * 0.25)
+	);
+	float2 flow2 = float2(
+		MeshLab_Liquid_FBM(p * 3.0 - Time * 0.2 + flow * 0.5),
+		MeshLab_Liquid_FBM(p * 3.0 + float2(3.7, 8.1) - Time * 0.15 + flow * 0.5)
+	);
+	float2 distortedP = p + (flow - 0.5) * 0.4 + (flow2 - 0.5) * 0.2;
+
+	// Animated metaball field
+	float blobs = 0.0;
+	float2 c1 = float2(sin(Time * 0.7) * 0.5,  cos(Time * 0.5) * 0.5);
+	float2 c2 = float2(cos(Time * 0.6 + 1.0) * 0.6, sin(Time * 0.8 + 2.0) * 0.4);
+	float2 c3 = float2(sin(Time * 0.5 + 3.0) * 0.4, cos(Time * 0.7 + 1.5) * 0.6);
+	float2 c4 = float2(cos(Time * 0.9 + 0.5) * 0.3, sin(Time * 0.4 + 4.0) * 0.5);
+	float2 c5 = float2(sin(Time * 0.4 + 2.0) * 0.55, cos(Time * 0.6 + 3.0) * 0.35);
+
+	blobs += MeshLab_Liquid_Metaball(distortedP, c1, 0.15);
+	blobs += MeshLab_Liquid_Metaball(distortedP, c2, 0.12);
+	blobs += MeshLab_Liquid_Metaball(distortedP, c3, 0.18);
+	blobs += MeshLab_Liquid_Metaball(distortedP, c4, 0.10);
+	blobs += MeshLab_Liquid_Metaball(distortedP, c5, 0.14);
+	blobs += MeshLab_Liquid_Metaball(distortedP, float2(-0.7, -0.7), 0.08);
+	blobs += MeshLab_Liquid_Metaball(distortedP, float2( 0.7,  0.7), 0.08);
+
+	float liquidSurface = smoothstep(0.8, 1.2, blobs);
+
+	// Iridescent palette
+	float colorPhase = MeshLab_Liquid_FBM(distortedP * 4.0 + Time * 0.1) + blobs * 0.3;
+
+	float3 color1 = float3(0.05, 0.15, 0.35);  // Deep blue
+	float3 color2 = float3(0.10, 0.40, 0.60);  // Ocean blue
+	float3 color3 = float3(0.20, 0.60, 0.80);  // Bright cyan
+	float3 color4 = float3(0.40, 0.20, 0.60);  // Purple
+	float3 color5 = float3(0.10, 0.80, 0.70);  // Teal
+
+	float t = frac(colorPhase + Time * 0.05);
+	float3 baseColor;
+	if      (t < 0.25) baseColor = lerp(color1, color2,  t          * 4.0);
+	else if (t < 0.50) baseColor = lerp(color2, color3, (t - 0.25) * 4.0);
+	else if (t < 0.75) baseColor = lerp(color3, color4, (t - 0.50) * 4.0);
+	else               baseColor = lerp(color4, color1, (t - 0.75) * 4.0);
+
+	float highlight = pow(liquidSurface, 3.0) * 0.5;
+	float edgeGlow  = smoothstep(0.6, 0.85, blobs) * (1.0 - smoothstep(0.85, 1.1, blobs));
+
+	// Specular-like highlights from flow gradient
+	float2 flowGrad = float2(
+		MeshLab_Liquid_FBM(distortedP * 4.0 + float2(0.1, 0.0) + Time * 0.2) - MeshLab_Liquid_FBM(distortedP * 4.0 - float2(0.1, 0.0) + Time * 0.2),
+		MeshLab_Liquid_FBM(distortedP * 4.0 + float2(0.0, 0.1) + Time * 0.2) - MeshLab_Liquid_FBM(distortedP * 4.0 - float2(0.0, 0.1) + Time * 0.2)
+	);
+	float specular = pow(max(0.0, dot(normalize(float3(flowGrad * 2.0, 1.0)), float3(0.5, 0.5, 0.707))), 8.0);
+
+	// Caustic-like patterns
+	float caustics = MeshLab_Liquid_FBM(distortedP * 8.0 + flow * 2.0 + Time * 0.3);
+	caustics = pow(caustics, 2.0) * 0.3;
+
+	float3 finalColor = baseColor;
+	finalColor += color5 * edgeGlow * 0.6;
+	finalColor += float3(0.8, 0.9, 1.0) * highlight;
+	finalColor += float3(0.6, 0.8, 1.0) * specular * liquidSurface * 0.4;
+	finalColor += color3 * caustics * (1.0 - liquidSurface * 0.5);
+
+	float vignette = 1.0 - length(p) * 0.3;
+	finalColor *= vignette;
+
+	float pulse = sin(Time * 2.0) * 0.5 + 0.5;
+	finalColor += color5 * pulse * liquidSurface * 0.1;
+
+	return finalColor;
+}
+
+// =============================================================================
+// Fractal Glow — ported from kollie's fractal_glow.mat
+// Iterated fractal fold-and-zoom in UV space with the kollie cyan/purple palette.
+// (Original defined a rot() matrix helper that wasn't called; omitted here.)
+// =============================================================================
+float3 MeshLab_FractalGlow(float2 UV, float Time)
+{
+	float2 p = UV * 2.0 - 1.0;
+
+	float3 finalColor = float3(0.0, 0.0, 0.0);
+
+	float3 color1 = float3(0.3, 0.0, 0.8);  // Deep purple
+	float3 color2 = float3(0.0, 0.4, 0.9);  // Royal blue
+	float3 color3 = float3(0.0, 0.9, 0.9);  // Cyan highlight
+
+	float2 p2 = p;
+	for (int i = 0; i < 4; ++i)
+	{
+		p2 = frac(p2 * 1.5) - 0.5;
+
+		float d2 = length(p2) * exp(-length(p));
+
+		float3 col = lerp(color1, color2, sin(length(p) + Time * 0.5 + float(i)) * 0.5 + 0.5);
+		col        = lerp(col, color3, sin(length(p2) * 8.0 - Time) * 0.5 + 0.5);
+
+		float dist = abs(sin(d2 * 8.0 + Time) / 8.0);
+		dist = pow(0.01 / dist, 1.2);
+
+		finalColor += col * dist;
+	}
+
+	// Central glow
+	float glow = 0.05 / (length(p) + 0.01);
+	finalColor += color3 * glow * 0.5;
+
+	// Subtle whole-screen pulse
+	finalColor *= 0.8 + 0.2 * sin(Time);
+
+	return finalColor;
+}
