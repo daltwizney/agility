@@ -1,6 +1,6 @@
-# Agility
+# Agility - UE5 plugin for an Agentic Future
 
-> **Accelerating real-time interactive AI — by building it, with AI.**
+> **Accelerating real-time interactive AI — by building it, with agentic AI.**
 
 We're at the start of something genuinely new: a human and an AI, side-by-side, shipping interactive systems at a pace neither could reach alone. **Agility** is the open research project where we test that thesis — across **computer vision, projection mapping, and natural language interfaces**, and the real-time graphics substrate they all stand on.
 
