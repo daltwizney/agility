@@ -42,7 +42,7 @@ Then ask something like *"I'm new to Agility — what should I look at first?"*.
 
 Two things to have in place before working through the tutorials in earnest:
 
-- **A passing familiarity with the Unreal Engine editor** — opening a project, navigating the viewport, the Content Browser, the Details panel. If you're coming from Unity, Epic's [Unreal Engine for Unity Developers](https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-for-unity-developers?lang=en-US) is a fast, focused crash-course in the editor concepts you'll need; if you've used UE before, skip it.
+- **A passing familiarity with the Unreal Engine editor** — opening a project, navigating the viewport, the Content Browser, the Details panel, hitting Play. If you're new to UE, Epic's [Your First Hour in Unreal Engine](https://dev.epicgames.com/documentation/unreal-engine/first-hour-in-unreal-engine) is the fastest way to get up to speed on the core engine concepts and editor workflows you'll need; if you've used UE before, skip it.
 - **The plugin integrated into a UE C++ project** with the editor building and Agility enabled — [`Docs/development-setup.md`](./Docs/development-setup.md) walks through the full flow (git submodule, build, wire `claude-code` to the plugin's `CLAUDE.md`).
 
 And if either of those feels intimidating: run `claude-code` at the root of this repository and ask. Claude will read the relevant doc and walk you through it step by step.
