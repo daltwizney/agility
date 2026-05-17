@@ -2,7 +2,9 @@
 
 This guide walks you through adding Agility to an existing Unreal Engine project so you can build with the plugin enabled and follow the tutorials in [`tutorials/`](./tutorials/).
 
-Agility is **mostly source** — C++, HLSL, and a minimal bundled `Content/` (raw video files plus a small handful of base-material `.uasset`s that C++ wraps at runtime) — and ships as a standalone git repo. There are two supported ways to integrate it into a UE project:
+Agility is **mostly source** — C++, HLSL, and a minimal bundled `Content/` (raw video files plus a small handful of base-material `.uasset`s that C++ wraps at runtime) — and ships as a standalone git repo. Shipping as a plugin (rather than as a UE project) is deliberate: it lets you keep Agility cleanly separated from your own work, so anything you've licensed from Fab, anything proprietary, anything you're not ready to publish stays in *your* UE project, while the public plugin repo stays free of it.
+
+There are two supported ways to integrate it into a UE project:
 
 - **Git submodule (recommended).** The plugin lives inside your project at `Plugins/Agility/` as a git submodule, pinned to a specific commit. Clean separation, per-project version pinning, and plugin file changes can never accidentally get staged in your project repo — the parent only ever records a SHA pointer, never the plugin's file contents. Works equally well whether you're just consuming the plugin or actively co-developing it (you can `cd` into the submodule, commit, and push upstream like any other repo).
 - **Symlink (alternative).** Clone the plugin once on your machine and symlink it into each UE project. Useful when you have several UE projects that should all track the same in-flight plugin checkout without per-project SHA pinning — see [Alternative: symlink instead of submodule](#alternative-symlink-instead-of-submodule) at the bottom of this guide.
@@ -71,6 +73,8 @@ The parent's `git status` will show `Plugins/Agility` as `(new commits)` wheneve
 ### Co-developing the plugin from inside your project
 
 If you want to make changes to the plugin while working in your UE project, the submodule directory *is* the plugin's git repo — `cd Plugins/Agility`, edit, commit, and `git push` against the plugin remote like any other repo. The parent project will show new commits in `git status` (so you can decide when to bump the pin) but won't see your individual file changes.
+
+While you have uncommitted edits inside the submodule, the parent `git status` / `git diff` will show the submodule pointer as `<sha>-dirty`. That's purely a status marker — `-dirty` isn't a real SHA, so don't try to commit it in the parent. Commit those edits inside the submodule first; the marker disappears, and the parent's diff becomes a clean SHA bump you can then commit as the "Bump Agility" step above.
 
 ## Step 2 — Build with the plugin enabled
 

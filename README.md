@@ -24,6 +24,31 @@ So Agility leans into the split. **Claude drafts and explains the C++ and config
 
 ---
 
+## If you're unsure where to start
+
+Install [`claude-code`](https://docs.claude.com/en/docs/claude-code), clone this repo, and start asking questions. Claude has read everything in here and is happy to recommend a tutorial, explain any UE5 concept you haven't seen before, or walk you through setup if you get stuck.
+
+```bash
+git clone https://github.com/daltwizney/agility.git
+cd agility
+claude
+```
+
+Then ask something like *"I'm new to Agility — what should I look at first?"*. That's the whole on-ramp.
+
+---
+
+## Prerequisites
+
+Two things to have in place before working through the tutorials in earnest:
+
+- **A passing familiarity with the Unreal Engine editor** — opening a project, navigating the viewport, the Content Browser, the Details panel. If you're coming from Unity, Epic's [Unreal Engine for Unity Developers](https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-for-unity-developers?lang=en-US) is a fast, focused crash-course in the editor concepts you'll need; if you've used UE before, skip it.
+- **The plugin integrated into a UE C++ project** with the editor building and Agility enabled — [`Docs/development-setup.md`](./Docs/development-setup.md) walks through the full flow (git submodule, build, wire `claude-code` to the plugin's `CLAUDE.md`).
+
+And if either of those feels intimidating: run `claude-code` at the root of this repository and ask. Claude will read the relevant doc and walk you through it step by step.
+
+---
+
 ## What's in the repo today
 
 The current artifacts are the foundational graphics + media substrate the research arc builds on — co-developed with Claude, in the open:
@@ -37,6 +62,12 @@ The current artifacts are the foundational graphics + media substrate the resear
 - **[`CLAUDE.md`](./CLAUDE.md)** — the file `claude-code` reads automatically. Encodes the project's conventions (the human/AI split, where your work goes vs. reference material, public-repo safety rules) so the AI shows up oriented from turn one.
 
 The computer-vision, projection-mapping, and natural-language-interface experiments are next; expect this list to grow.
+
+---
+
+## Why a plugin (and not a standalone UE project)?
+
+Agility ships as a **plugin** rather than a self-contained UE project on purpose: this repo holds the public, shareable source + a minimal bundled `Content/`, and *your* UE project — separate from this repo, never committed here — is where you keep everything you don't want to publish. Anything you've licensed from Fab, anything proprietary, anything experimental: it all lives in your project's `Content/` and `Source/`, while you still get the full Agility toolset by dropping the plugin into your project's `Plugins/Agility/` folder (as a git submodule). The split keeps the public plugin repo clean and lets you build whatever you want on top of it without worrying about asset licensing or NDA leakage.
 
 ---
 

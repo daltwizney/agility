@@ -37,7 +37,7 @@ When the plugin's maintainers add a new feature, it follows the same scope-doc-f
 
 ## User Content Convention
 
-Tutorial followers do their own work in their **own project's** dedicated folders, *not* inside the Agility plugin tree. This keeps the plugin source pristine across `git pull`s and avoids accidental commits back to the public plugin repo:
+Agility is a public plugin; the host UE project is where everything the user doesn't want to publish lives. Anything licensed from Fab, anything proprietary, in-progress experiments — all of it stays in the host project's tree, while the plugin source stays pristine across `git pull`s and can't accidentally collect commits back to the public repo. So tutorial followers do their own work in their **own project's** dedicated folders, *not* inside the Agility plugin tree:
 
 - `Content/MyContent/` (in the host project) — the reader's UE assets, maps, materials, blueprints
 - `Source/<YourProjectModule>/MyScripts/` (in the host project) — the reader's C++ classes
