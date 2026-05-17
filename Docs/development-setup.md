@@ -6,10 +6,11 @@ Agility is **mostly source** — C++, HLSL, and a minimal bundled `Content/` (ra
 
 ## Prerequisites
 
-1. **A UE C++ project** — Agility is a C++ plugin, so you need a project that already builds C++ (i.e. created with a "C++" template, or already has a `Source/` directory and a working `.uproject` with at least one module). A Blueprints-only project will need to be converted to C++ first (UE editor → Tools → "New C++ Class…" creates the Source tree).
-2. **Unreal Engine** — installed via the Epic Games Launcher. The plugin has been developed against **UE 5.7** and should work on adjacent versions. Confirm your project's engine version via the `EngineAssociation` field in your project's `.uproject`.
-3. **A C++ IDE for UE development** — on macOS we recommend [**JetBrains Rider**](https://www.jetbrains.com/rider/) (built-in UE support, no Epic-Launcher project-file generation needed). On Windows, Visual Studio (2022+) works the same way through its UE integration. Pick whichever is comfortable on your platform.
-4. **Platform toolchain** — on macOS, the full Xcode SDK plus accepting the license is required for the underlying toolchain even if you don't open Xcode (`xcode-select --install` + `sudo xcodebuild -license accept`). On Windows, the Visual Studio "Game development with C++" workload covers it.
+1. **`claude-code`** — the CLI that drives every tutorial in this repo. Install it by following [Anthropic's instructions](https://docs.claude.com/en/docs/claude-code). The plugin's [`CLAUDE.md`](../CLAUDE.md) is auto-loaded by `claude-code` when you launch a session in a directory that references it, so the project's conventions (the human/AI split, where your own work goes, public-repo safety rules) kick in from turn one — see Step 4 below for how to wire it into your own project.
+2. **A UE C++ project** — Agility is a C++ plugin, so you need a project that already builds C++ (i.e. created with a "C++" template, or already has a `Source/` directory and a working `.uproject` with at least one module). A Blueprints-only project will need to be converted to C++ first (UE editor → Tools → "New C++ Class…" creates the Source tree).
+3. **Unreal Engine** — installed via the Epic Games Launcher. The plugin has been developed against **UE 5.7** and should work on adjacent versions. Confirm your project's engine version via the `EngineAssociation` field in your project's `.uproject`.
+4. **A C++ IDE for UE development** — on macOS we recommend [**JetBrains Rider**](https://www.jetbrains.com/rider/) (built-in UE support, no Epic-Launcher project-file generation needed). On Windows, Visual Studio (2022+) works the same way through its UE integration. Pick whichever is comfortable on your platform.
+5. **Platform toolchain** — on macOS, the full Xcode SDK plus accepting the license is required for the underlying toolchain even if you don't open Xcode (`xcode-select --install` + `sudo xcodebuild -license accept`). On Windows, the Visual Studio "Game development with C++" workload covers it.
 
 ## Step 1 — Clone the plugin
 
@@ -49,7 +50,7 @@ The plugin ships with `EnabledByDefault: true` in `Agility.uplugin`, so once you
 
 If the build fails complaining about missing modules, double-check that `Plugins/Agility/Agility.uplugin` resolves through the symlink (it should `cat` cleanly from a terminal).
 
-## Step 4 — Wire `claude-code` to the plugin's conventions (optional but recommended)
+## Step 4 — Wire `claude-code` to the plugin's conventions
 
 To get the full tutorial workflow, point your project's `CLAUDE.md` at the plugin's. Create or edit `CLAUDE.md` in your project root:
 
@@ -60,6 +61,12 @@ To get the full tutorial workflow, point your project's `CLAUDE.md` at the plugi
 ```
 
 The `@./Plugins/Agility/CLAUDE.md` line tells `claude-code` to load Agility's conventions (the human/AI split, where your work goes, public-repo safety rules) automatically when you start a session in your project root. Add any project-specific instructions above or below it.
+
+## Next: working through your first tutorial
+
+With the plugin building and `claude-code` wired in, head to [`tutorials/`](./tutorials/) and pick one — [`01-hello-unreal.md`](./tutorials/01-hello-unreal.md) is the suggested starting point.
+
+One thing to internalize before you open it: **the tutorials are conversation starters, not read-throughs.** Reading the markdown alone will only ever get you a partial picture. The intended loop is: open the tutorial next to a live `claude-code` session in your project root, send the prompts the tutorial gives, and then *go off-script* — ask Claude why it wrote the code that way, ask what would change if a parameter were different, ask for an explanation of any Unreal API or reflection macro you haven't seen before, ask for a tweak and watch it land in the editor. The tutorial gives you the spine; the back-and-forth with Claude is where you actually learn UE5 C++ and get a feel for the human + AI loop the plugin is built around.
 
 ## Day-to-day workflow notes
 

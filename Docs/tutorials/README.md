@@ -2,7 +2,9 @@
 
 The tutorials are the **public face of Agility's research** — they let any curious reader experience the human + AI build loop firsthand, on their own machine, in their own UE project. Each one is an end-to-end build you walk through with `claude-code`: open the markdown, hand it to Claude, and start asking questions.
 
-Tutorials assume you've integrated the Agility plugin into a UE project — see [`../development-setup.md`](../development-setup.md) if you haven't yet.
+**These docs are conversation starters, not read-throughs.** Skimming a tutorial top-to-bottom gets you the shape of the build, but it misses the whole point. The intended loop is: open the doc next to a live `claude-code` session, send the prompts the tutorial gives, then *go off-script* — ask Claude why it wrote the code that way, ask what would change if a value were different, ask for an explanation of any Unreal API you haven't seen before, ask for a tweak and watch it land. The tutorial is a spine; the back-and-forth with Claude is where the human + AI loop actually pays off, and where you build real UE5 C++ chops along the way.
+
+Tutorials assume you've integrated the Agility plugin into a UE project and have `claude-code` installed and wired in — see [`../development-setup.md`](../development-setup.md) if you haven't yet.
 
 ## Status convention
 
