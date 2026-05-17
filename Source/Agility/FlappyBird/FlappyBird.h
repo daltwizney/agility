@@ -4,12 +4,33 @@
 #include "GameFramework/Pawn.h"
 #include "FlappyBird.generated.h"
 
-class UProceduralMeshComponent;
 class UCameraComponent;
+class UPrimitiveComponent;
 class USceneComponent;
+class USoundBase;
 class USphereComponent;
-class UMaterialInterface;
+class UStaticMeshComponent;
 
+UENUM()
+enum class EBirdState : uint8
+{
+	Idle,    // Pre-flap, bobs in place. First Flap input transitions to Flying.
+	Flying,  // Gravity + flap + pitch + wing-flap animation.
+	Dead,    // Ragdoll spin + gravity; wings pinned out. Click → restart via GameMode.
+};
+
+// Procedural bird: cube-sphere body + cone beak/crest/tail + spherical eyes
+// (white + black pupil) + two flap-pivot wings (cubes). Mirrors kollie's
+// FlappyBirdController exactly — same physics constants, same wing animation
+// curve, same pitch lerp, same dead-fall spin.
+//
+// Camera lives on the pawn but is world-locked (absolute location/rotation) so
+// the bird can move up/down within the frame. Bloom is configured in C++ on
+// the camera's PostProcessSettings; no post-process volume asset needed.
+//
+// Collision: the sphere collider listens for overlaps with the FlappyBackground
+// floor/ceiling kill volumes and notifies the GameMode. Pipe / score-gate
+// overlaps are owned by APipePair itself (it knows which is which).
 UCLASS()
 class AGILITY_API AFlappyBird : public APawn
 {
@@ -23,90 +44,63 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(VisibleAnywhere, Category = "FlappyBird")
-	TObjectPtr<USceneComponent> Root;
+	// --- Component tree
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<USceneComponent> Root;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<USphereComponent> Collider;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UCameraComponent> Camera;
 
-	UPROPERTY(VisibleAnywhere, Category = "FlappyBird")
-	TObjectPtr<UProceduralMeshComponent> BodyMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> BodyMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> BeakMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> CrestMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> TailMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> EyeLMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> EyeRMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> PupilLMesh;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> PupilRMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "FlappyBird")
-	TObjectPtr<UProceduralMeshComponent> WingMesh;
+	// Wing pivots are SceneComponents — flapping rotates the pivot; the visual
+	// cube is a child, offset outward, so its tip swings in a real arc.
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<USceneComponent> WingPivotL;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<USceneComponent> WingPivotR;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> WingMeshL;
+	UPROPERTY(VisibleAnywhere, Category = "Bird") TObjectPtr<UStaticMeshComponent> WingMeshR;
 
-	UPROPERTY(VisibleAnywhere, Category = "FlappyBird")
-	TObjectPtr<UCameraComponent> Camera;
+	// --- State (read by GameMode for HUD / phase decisions)
+	EBirdState GetState() const { return State; }
 
-	UPROPERTY(VisibleAnywhere, Category = "FlappyBird")
-	TObjectPtr<USphereComponent> Collider;
+	// Called by GameMode on RequestRestart — moves the bird back to spawn, resets velocity/state.
+	void ResetForReady();
 
-	// --- Bird shape (cm)
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	FVector BodyRadii = FVector(55.0f, 30.0f, 38.0f);
+	// Called by GameMode when transitioning READY→PLAYING (in addition to any flap impulse).
+	void StartFlying();
 
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	float BeakLength = 28.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	float BeakRadius = 10.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	float EyeRadius = 5.5f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	float WingLength = 55.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape")
-	float WingTipHeight = 18.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape", meta = (ClampMin = "4", ClampMax = "48"))
-	int32 SphereSegments = 18;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Shape", meta = (ClampMin = "3", ClampMax = "24"))
-	int32 SphereRings = 12;
-
-	// --- Animation
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Animation")
-	float FlapFrequencyHz = 6.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Animation")
-	float FlapAmplitudeDeg = 45.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Animation")
-	float FlapRestDeg = 10.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Animation")
-	float FlapBoostFrequencyAddHz = 10.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Animation", meta = (ClampMin = "0.0"))
-	float FlapBoostDuration = 0.5f;
-
-	// --- Physics (cm/s, cm/s^2)
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Physics")
-	float Gravity = 2200.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Physics")
-	float FlapImpulse = 700.0f;
-
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Physics")
-	float MaxFallSpeed = 1400.0f;
-
-	// --- Camera
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Camera")
-	float CameraDistance = 900.0f;
-
-	// --- Collision
-	UPROPERTY(EditAnywhere, Category = "FlappyBird|Collision", meta = (ClampMin = "1.0"))
-	float CollisionRadius = 35.0f;
+	UFUNCTION()
+	void OnColliderOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
+	void OnFlapPressed();
 	void Flap();
-	void BuildBody();
-	void BuildWing();
-	void ApplySectionColor(UProceduralMeshComponent* Mesh, int32 SectionIndex, const FLinearColor& Color);
+	void Die();
 
-	UPROPERTY()
-	TObjectPtr<UMaterialInterface> ColoredParentMaterial;
+	void TickIdle(float Dt);
+	void TickFlying(float Dt);
+	void TickDead(float Dt);
+	void AnimateWings(float Dt, float RateHz, float AmplitudeDeg);
 
-	float VerticalVelocity = 0.0f;
-	float FlapPhase = 0.0f;
-	float FlapBoostRemaining = 0.0f;
+	void PlaySoundOnce(USoundBase* Sound, float Volume);
+
+	EBirdState State = EBirdState::Idle;
+	float VelocityZ = 0.0f;
+	float FlapBoostTimer = 0.0f;
+	float WingPhase = 0.0f;
+	float IdleTimeAccum = 0.0f;
+
+	// Cached SFX (loaded on BeginPlay via LoadObject — see .cpp for paths).
+	UPROPERTY() TObjectPtr<USoundBase> SfxFlap;
+	UPROPERTY() TObjectPtr<USoundBase> SfxScore;
+	UPROPERTY() TObjectPtr<USoundBase> SfxHit;
+
+	// Made visible to GameMode so it can play the score sound when a pipe reports a score.
+	friend class AFlappyBirdGameMode;
 };

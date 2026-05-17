@@ -4,12 +4,24 @@
 #include "GameFramework/Actor.h"
 #include "PipePair.generated.h"
 
-class UProceduralMeshComponent;
-class USceneComponent;
 class UBoxComponent;
-class UMaterialInterface;
 class UPrimitiveComponent;
+class USceneComponent;
+class UStaticMeshComponent;
 
+// One cyan-or-magenta pipe pair: a top cube shaft + top cap, a bottom cube shaft
+// + bottom cap, two kill colliders (one per column), and a thin score-trigger
+// AABB centered in the gap. Mirrors kollie's `spawnPipePair` exactly, with the
+// per-column "cap at gap end" wider-than-shaft block giving it the mario-pipe
+// silhouette.
+//
+// Properties set by APipeSpawner before FinishSpawning():
+//   - GapCenterZ : random Z in ±PipeGapZRange
+//   - bUseCyan   : alternated each spawn so the playfield reads as motion even
+//                  when nothing's animating
+//
+// Tick scrolls the actor in -X at PipeScrollSpeed and self-destructs once it
+// crosses the despawn line.
 UCLASS()
 class AGILITY_API APipePair : public AActor
 {
@@ -25,54 +37,33 @@ public:
 	TObjectPtr<USceneComponent> Root;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe")
-	TObjectPtr<UProceduralMeshComponent> BottomPipeMesh;
+	TObjectPtr<UStaticMeshComponent> TopShaftMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe")
-	TObjectPtr<UProceduralMeshComponent> TopPipeMesh;
+	TObjectPtr<UStaticMeshComponent> TopCapMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pipe|Collision")
-	TObjectPtr<UBoxComponent> BottomHitBox;
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	TObjectPtr<UStaticMeshComponent> BottomShaftMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Pipe")
+	TObjectPtr<UStaticMeshComponent> BottomCapMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe|Collision")
 	TObjectPtr<UBoxComponent> TopHitBox;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pipe|Collision")
+	TObjectPtr<UBoxComponent> BottomHitBox;
+
+	UPROPERTY(VisibleAnywhere, Category = "Pipe|Collision")
 	TObjectPtr<UBoxComponent> ScoreTrigger;
 
-	// --- Shape (cm)
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
+	// Spawner-set: Z (vertical) of the gap center.
+	UPROPERTY(EditAnywhere, Category = "Pipe")
 	float GapCenterZ = 0.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	float GapHeight = 280.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	float PipeRadius = 75.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	float RimRadius = 92.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	float RimHeight = 40.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	float PipeExtent = 1500.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape", meta = (ClampMin = "6", ClampMax = "48"))
-	int32 Sides = 18;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	FLinearColor PipeColor = FLinearColor(0.18f, 0.65f, 0.20f);
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Shape")
-	FLinearColor RimColor = FLinearColor(0.12f, 0.50f, 0.16f);
-
-	// --- Motion (cm/s and cm)
-	UPROPERTY(EditAnywhere, Category = "Pipe|Motion")
-	float ScrollSpeed = 600.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Pipe|Motion")
-	float DespawnX = -2000.0f;
+	// Spawner-set: alternates each spawn so adjacent pipes have different neon hues.
+	UPROPERTY(EditAnywhere, Category = "Pipe")
+	bool bUseCyan = true;
 
 	UFUNCTION()
 	void OnHitBoxOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -84,10 +75,6 @@ public:
 
 private:
 	void BuildPipes();
-	void ApplySectionColor(UProceduralMeshComponent* Mesh, int32 SectionIndex, const FLinearColor& Color);
-
-	UPROPERTY()
-	TObjectPtr<UMaterialInterface> ColoredParentMaterial;
 
 	bool bScored = false;
 };

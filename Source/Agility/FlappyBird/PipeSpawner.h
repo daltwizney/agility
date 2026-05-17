@@ -7,6 +7,11 @@
 class APipePair;
 class USceneComponent;
 
+// Tick-driven spawner: every PipeSpawnInterval seconds while the game is in the
+// PLAYING phase, spawn a new APipePair at PipeSpawnX with a random gap Z and
+// alternating cyan/magenta colors. Game mode spawns this actor on BeginPlay,
+// so the level itself stays empty. Game mode also calls ClearPipes() on
+// restart to wipe any in-flight pipes.
 UCLASS()
 class AGILITY_API APipeSpawner : public AActor
 {
@@ -15,8 +20,7 @@ class AGILITY_API APipeSpawner : public AActor
 public:
 	APipeSpawner();
 
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(VisibleAnywhere, Category = "Spawner")
 	TObjectPtr<USceneComponent> Root;
@@ -24,31 +28,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawner")
 	TSubclassOf<APipePair> PipeClass;
 
-	UPROPERTY(EditAnywhere, Category = "Spawner", meta = (ClampMin = "0.1"))
-	float SpawnInterval = 1.6f;
-
-	UPROPERTY(EditAnywhere, Category = "Spawner")
-	float InitialDelay = 1.0f;
-
-	// World Z values defining the vertical range of the gap center.
-	UPROPERTY(EditAnywhere, Category = "Spawner")
-	float GapMinZ = -300.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Spawner")
-	float GapMaxZ = 300.0f;
-
-	// Forwarded to each spawned pipe so the spawner is the single source of truth.
-	UPROPERTY(EditAnywhere, Category = "Spawner|Pipe")
-	float GapHeight = 280.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Spawner|Pipe")
-	float ScrollSpeed = 600.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Spawner|Pipe")
-	float DespawnX = -2000.0f;
+	// Destroys every pipe this spawner has ever produced that is still alive.
+	// Called by the game mode on restart so dead-fall frames don't see leftover
+	// pipes from the previous run.
+	void ClearActivePipes();
 
 private:
 	void SpawnPipe();
 
-	FTimerHandle SpawnTimer;
+	float SpawnTimer = 0.0f;
+	int32 SpawnCounter = 0;
+	TArray<TWeakObjectPtr<APipePair>> ActivePipes;
 };

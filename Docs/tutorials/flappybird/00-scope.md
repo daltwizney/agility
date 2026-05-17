@@ -117,3 +117,41 @@ Things we're explicitly trying to learn / confirm while building, so the tutoria
 - How smooth the C++ ↔ editor handoffs feel in practice (and whether the "request, don't fake" rule needs tightening).
 - Whether procedural meshes + `DrawHUD` are enough for a feel-good prototype, or if we hit walls that need editor assets.
 - Any pain points in input setup via `DefaultInput.ini` that would trip up a new reader.
+
+## Part 6 — kollie port (in progress, started 2026-05-17)
+
+**Deliverable:** Replace the prototype game from Parts 1–4 with a 1:1 visual + behavioral port of the kollie OpenGL Flappy Bird (`../kollie/app/src/main/java/com/wizneylabs/kollie/demo/flappybird/`). Same neon palette, same procedurally-built bird (cube-sphere body + cone beak/crest/tail + sphere eyes + flap-pivot wings), same alternating cyan/magenta cube pipes, same procedural background (ground / mountains / stars / moon / moonlight), same Ready→Playing→Dead state machine, same audio (flap / score / hit + Herd The Stars BGM), same HUD layout (yellow score, pink BEST pill, cyan TAP TO FLAP / red GAME OVER banners).
+
+The kollie reference is the source of truth — when in doubt, mirror the kollie file. World units are kollie meters ×100 (UE cm). Axis map: kollie `X` (scroll) → UE `X`, kollie `Y` (vertical) → UE `Z`, kollie `Z` (depth) → UE `Y`.
+
+**Why a full rewrite instead of an incremental polish pass:** Parts 1–3 used cylinder pipes, a sphere+triangle bird with flat shading via `BasicShapeMaterial`, and the procedural-mesh-per-actor pattern. The kollie reference is structurally different — emissive materials + bloom drive the entire visual language, scale-and-paint with static cubes/spheres/cones is faster than hand-coding triangles for every part, and the state machine + alternating-color spawner is cleaner than the timer-only spawner we had. Easier to scrap and rebuild than to migrate piece by piece.
+
+### File map
+
+| File | Role |
+| --- | --- |
+| `FlappyBirdConstants.h` | All gameplay constants — kollie values ×100 (m → cm). |
+| `FlappyNeonMaterials.{h,cpp}` | Loader + per-spec MID factory over `M_AgilityNeonEmissive`. Centralizes the kollie palette. |
+| `FlappyBackground.{h,cpp}` | Procedural mountains, sphere stars, sphere moon, plane ground, directional moonlight, plus floor/ceiling kill colliders. Auto-spawned by the game mode. |
+| `PipePair.{h,cpp}` | Cube shaft + wider cube cap per column (cyan or magenta); two kill boxes + one score-trigger AABB; scrolls in `-X` and self-destructs past `PipeDespawnX`. |
+| `PipeSpawner.{h,cpp}` | Ticks while phase==Playing, spawns one pair per `PipeSpawnInterval` with alternating colors and random gap Z; owns the active-pipe list for restart cleanup. |
+| `FlappyBird.{h,cpp}` | Pawn — cube-sphere body + cone beak/crest/tail + sphere eyes/pupils + flap-pivot wings. Idle bob, live flight (gravity / flap / pitch lerp / wing flap), dead-fall ragdoll. World-locked camera with bloom enabled in C++. |
+| `FlappyBirdGameMode.{h,cpp}` | State machine (Ready / Playing / Dead), score + best, spawns background + spawner on BeginPlay, BGM autoplay, restart flow. |
+| `FlappyBirdHUD.{h,cpp}` | DrawHUD: yellow score top-center, pink BEST pill, cyan TAP TO FLAP / red GAME OVER banner. No UMG assets. |
+
+### Editor work the human owns (one-time, see "Pre-flight handoff" below)
+
+- [ ] **Create `M_AgilityNeonEmissive` material asset** under `Plugins/Agility/Content/Materials/`. Three parameters: `BaseColor` (Vector4), `EmissiveColor` (Vector3), `EmissiveIntensity` (Scalar). Until this exists, every neon mesh renders as the unshaded default and `FlappyNeonMaterials` logs one warning.
+- [ ] **Import the audio files** at `Plugins/Agility/Content/Audio/` (4 used by the game: `SFX/space-shooter/sfx_shieldUp.ogg`, `SFX/space-shooter/sfx_twoTone.ogg`, `SFX/space-shooter/sfx_lose.ogg`, `Music/Herd The Stars v2.mp3`). Right-click → Import inside the editor. Set `Looping` on the BGM SoundWave so it actually loops.
+- [ ] **Set the level's GameMode override** to `FlappyBirdGameMode` (World Settings panel). The map can otherwise be empty — the game mode spawns the background, pipe spawner, and bird itself.
+
+### What we learned, refined in the port (fill in as snags surface)
+
+- _(placeholder for first PIE run)_
+
+### Open / deferred
+
+- **Best-score persistence** across sessions (current `Best` lives in-memory on the game mode). Easy SaveGame add-on; defer until after the port plays well.
+- **Bloom tuning.** Camera-side bloom intensity is parked at `1.0` in C++; kollie used `0.32`, but UE's bloom curve responds differently. Expect to tune by eye on first PIE run.
+- **Mountain shading.** Pentagonal cones with flat-shaded face normals look faceted by design (matches kollie screenshots). If they read as too sharp under the moonlight, average normals at shared vertices.
+- **Android target.** Game logic is platform-agnostic; mouse-click maps to the same `Flap` action that a touch event would. Touch-input wiring + Android packaging is its own future part.
