@@ -44,12 +44,9 @@ void AFlappyBirdGameMode::BeginPlay()
 			/*StartTime=*/0.0f, /*ConcurrencySettings=*/nullptr,
 			/*bPersistAcrossLevelTransition=*/true,
 			/*bAutoDestroy=*/false);
-		if (BgmComponent)
-		{
-			// Loop. SpawnSound2D doesn't loop by default; toggle via the sound asset's settings or set here.
-			// Modifying loop on the component isn't a single-call API — for now we rely on the
-			// imported SoundWave's "Looping" property being enabled. See Part 6 handoff for details.
-		}
+		// Looping is set on the imported SoundWave asset itself (Herd_The_Stars_v2.uasset
+		// has it on) — SpawnSound2D doesn't loop by default and modifying loop on the
+		// component isn't a single-call API.
 	}
 
 	SfxScore = LoadObject<USoundBase>(nullptr, TEXT("/Agility/Audio/SFX/space-shooter/sfx_twoTone.sfx_twoTone"));

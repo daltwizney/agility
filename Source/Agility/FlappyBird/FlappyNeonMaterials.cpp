@@ -9,10 +9,10 @@ DEFINE_LOG_CATEGORY_STATIC(LogFlappyNeon, Log, All);
 
 namespace
 {
-	// Authored by the human in editor — see Docs/tutorials/flappybird/00-scope.md (Part 6) for the asset spec.
-	// Identifier is namespace-unique because UE's unity build concatenates source files into a single
-	// translation unit, and a bare `GBaseMaterialPath` here would collide with the same name in
-	// `AgilityVideoQuad.cpp`. Prefix keeps both happy.
+	// Ships with the plugin under Content/Materials/. Identifier is namespace-unique because
+	// UE's unity build concatenates source files into a single translation unit, and a bare
+	// `GBaseMaterialPath` here would collide with the same name in `AgilityVideoQuad.cpp`.
+	// Prefix keeps both happy.
 	const TCHAR* const GFlappyNeonBaseMaterialPath = TEXT("/Agility/Materials/M_AgilityNeonEmissive.M_AgilityNeonEmissive");
 
 	bool GFlappyNeonHasWarnedMissingBase = false;
@@ -30,7 +30,7 @@ namespace FlappyNeonMaterials
 			GFlappyNeonHasWarnedMissingBase = true;
 			UE_LOG(LogFlappyNeon, Warning,
 				TEXT("FlappyNeonMaterials: base material missing at %s. Bird/pipes/background will appear unshaded.")
-				TEXT(" Create the material asset per Docs/tutorials/flappybird/00-scope.md (Part 6)."),
+				TEXT(" Verify the Agility plugin's Content/Materials/ is intact and the plugin is enabled."),
 				GFlappyNeonBaseMaterialPath);
 		}
 		return Base;

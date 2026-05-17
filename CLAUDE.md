@@ -31,7 +31,7 @@ When the plugin's maintainers add a new feature, it follows the same scope-doc-f
 
 1. **Scope doc** — start a `Docs/tutorials/<topic>/00-scope.md` with `status: draft`. It holds the agreed arc, per-part TODO checklists (`- [ ]` items), decisions made along the way, and a "What we learned" section per part that fills in *as snags surface*.
 2. **Exercise** — work through the parts in real sessions. Tick TODOs as we finish them; capture surprises in the "What we learned" sections in the moment, not retroactively.
-3. **Graduate** — once a part is stable, extract its polished walk-through into a numbered `NN-….md` tutorial in the same folder, marked `status: ready`. The scope doc shrinks to only the still-WIP parts; when the last part graduates, the scope doc either gets deleted or kept as a slim "lessons" appendix.
+3. **Graduate** — once a part is stable, extract its polished walk-through into a numbered `NN-….md` tutorial in the same folder, marked `status: ready`. The scope doc shrinks to only the still-WIP parts; when the last part graduates, the scope doc is deleted entirely. Don't preserve a "lessons" appendix — well-shaped tutorial steps + the codebase + git history are the durable record, and standalone lessons lists rot the moment the code moves on.
 
 **Don't pre-write a tutorial before doing the work** — the lessons-learned content only exists after the work surfaces it, and a speculative tutorial sets newcomers up for the same snags we'd otherwise have already documented around.
 

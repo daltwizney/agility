@@ -12,8 +12,8 @@ class UProceduralMeshComponent;
 // plus the emissive triple the kollie shader fed into its emissive output.
 //
 // All MIDs are derived from the single base material
-// `/Agility/Materials/M_AgilityNeonEmissive` (authored once in editor — see
-// Docs/tutorials/flappybird/00-scope.md Part 6 for the asset spec).
+// `/Agility/Materials/M_AgilityNeonEmissive`, which ships with the plugin
+// (params: BaseColor vector, EmissiveColor vector, EmissiveIntensity scalar).
 namespace FlappyNeonPalette
 {
 	struct FNeonSpec
@@ -50,8 +50,8 @@ namespace FlappyNeonMaterials
 {
 	// Load the shared base material `M_AgilityNeonEmissive`. Cached on the
 	// returned pointer — repeated calls are cheap. Returns nullptr if the
-	// asset isn't present (user hasn't created it yet); callers should log
-	// once and fall back gracefully.
+	// asset isn't present (plugin Content missing or unloaded); callers
+	// should log once and fall back gracefully.
 	UMaterialInterface* GetBaseMaterial();
 
 	// Create a MID from the base material with the spec applied. `Outer`

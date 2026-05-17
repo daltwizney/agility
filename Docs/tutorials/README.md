@@ -27,4 +27,4 @@ If a doc has no frontmatter, treat it as `draft` until proven otherwise.
 |---|---|---|
 | [`01-hello-unreal.md`](./01-hello-unreal.md) | ready | Three procedural actors (voxel island, spiral galaxy, fractal tree) — your first end-to-end loop with the human + Claude workflow. |
 | [`proceduralmesh/`](./proceduralmesh/) | draft | Procedural mesh fundamentals + a Custom-HLSL shader pipeline so Claude can author per-vertex data and shading from C++ / `.ush` text. In active development — see [`proceduralmesh/00-scope.md`](./proceduralmesh/00-scope.md). |
-| [`flappybird/`](./flappybird/) | draft | Scope notes for a Flappy Bird build. Paused while we focus on procedural mesh + material workflow. |
+| [`flappybird/`](./flappybird/) | ready | Build a neon Flappy Bird end-to-end in C++ — bird, pipes, score / HUD / state machine, audio. Chunkier follow-up to `01-hello-unreal`; ~3 hours across three parts. Start at [`flappybird/README.md`](./flappybird/README.md). |
