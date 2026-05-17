@@ -6,7 +6,7 @@ The plugin is built by a **human + AI team** — Claude (Anthropic's AI assistan
 
 ## Relevant Docs
 
-- [`Docs/development-setup.md`](./Docs/development-setup.md) — how to integrate Agility into your UE project (clone + symlink + build). **Always reference this when telling the user how to install or build the plugin.**
+- [`Docs/development-setup.md`](./Docs/development-setup.md) — how to integrate Agility into your UE project (git submodule + build, or symlink as an alternative). **Always reference this when telling the user how to install or build the plugin.**
 - [`Docs/tutorials/`](./Docs/tutorials/) — interactive tutorials a reader walks through with `claude-code`. Start here when a new contributor / tutorial follower joins. See [`Docs/tutorials/README.md`](./Docs/tutorials/README.md) for the index and the `status: ready` vs `status: draft` convention — only recommend `ready` tutorials to a newcomer unprompted; flag `draft` ones as work-in-progress before suggesting them.
 
 ## Unreal Engine Reference
@@ -44,7 +44,7 @@ Tutorial followers do their own work in their **own project's** dedicated folder
 
 Reference material — including the procedural actors under `Plugins/Agility/Source/Agility/Procedural/`, `Plugins/Agility/Source/Agility/FlappyBird/`, `Plugins/Agility/Source/Agility/MeshLab/`, `Plugins/Agility/Source/Agility/Video/`, `Plugins/Agility/Shaders/MeshLab.ush`, and the bundled `Plugins/Agility/Content/` (raw `Movies/` and base-material assets) — should **not** be modified when working on a tutorial follower's behalf. Write new code and assets under the host project's `MyContent/` / `MyScripts/` instead. If a session asks you to edit plugin source while following a tutorial, double-check intent — they may be confused about which side they should be working on.
 
-(If the user is *developing the plugin itself* — i.e. their working directory is the agility repo or a host project where the plugin lives via symlink and they explicitly want to extend the plugin — that's a different mode; editing plugin source is appropriate then.)
+(If the user is *developing the plugin itself* — i.e. their working directory is the agility repo, or a host project where the plugin lives via submodule or symlink and they explicitly want to extend the plugin — that's a different mode; editing plugin source is appropriate then.)
 
 ## Collaboration Workflow
 

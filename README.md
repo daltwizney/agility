@@ -42,9 +42,9 @@ The computer-vision, projection-mapping, and natural-language-interface experime
 
 ## Getting started
 
-1. **Set up your dev environment** — follow [`Docs/development-setup.md`](./Docs/development-setup.md) to clone the plugin, symlink it into your UE project's `Plugins/` directory, and build the editor target with the plugin enabled.
+1. **Set up your dev environment** — follow [`Docs/development-setup.md`](./Docs/development-setup.md) to add the plugin to your UE project's `Plugins/` directory (as a git submodule, recommended; or a symlink) and build the editor target with the plugin enabled.
 2. **Open your project in your IDE**, build the editor, and confirm the Agility plugin loads (Edit → Plugins → search "Agility").
-3. **Start `claude-code` in your project root**, then open [`Docs/tutorials/01-hello-unreal.md`](./Docs/tutorials/01-hello-unreal.md) (via the symlinked plugin at `Plugins/Agility/Docs/tutorials/01-hello-unreal.md`) and walk through it. The tutorial gives you the exact prompts to send your AI partner.
+3. **Start `claude-code` in your project root**, then open [`Docs/tutorials/01-hello-unreal.md`](./Docs/tutorials/01-hello-unreal.md) (via the plugin at `Plugins/Agility/Docs/tutorials/01-hello-unreal.md`) and walk through it. The tutorial gives you the exact prompts to send your AI partner.
 4. **Riff.** Tweak parameters. Break things. Ask Claude why something behaves the way it does. That's the whole point.
 
 ---

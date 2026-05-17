@@ -20,7 +20,7 @@ Plan ~1–2 hours; most of it is downloads and the first compile.
 
 You'll need:
 
-- A UE C++ project with the Agility plugin integrated. If you haven't done that yet, follow [`../development-setup.md`](../development-setup.md) first — it walks through cloning the plugin, symlinking it into your project, and building the editor with it enabled.
+- A UE C++ project with the Agility plugin integrated. If you haven't done that yet, follow [`../development-setup.md`](../development-setup.md) first — it walks through adding the plugin to your project (as a git submodule, recommended; or a symlink) and building the editor with it enabled.
 - `claude-code` installed and ready to run from your project root.
 
 Once your editor opens with the Agility plugin loaded (Edit → Plugins → search "Agility"), you're ready to start.
