@@ -382,5 +382,8 @@ void AFlappyBird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	if (!PlayerInputComponent) return;
-	PlayerInputComponent->BindAction(TEXT("Flap"), IE_Pressed, this, &AFlappyBird::OnFlapPressed);
+	// Action name + SpaceBar / LMB mapping are shipped by the plugin in
+	// Plugins/Agility/Config/DefaultInput.ini. Namespaced "Agility.FlappyBird.*"
+	// so it can't collide with a host project's own action names.
+	PlayerInputComponent->BindAction(TEXT("Agility.FlappyBird.Flap"), IE_Pressed, this, &AFlappyBird::OnFlapPressed);
 }

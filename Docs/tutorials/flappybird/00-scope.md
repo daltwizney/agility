@@ -12,7 +12,9 @@ Reference implementation: `Source/Agility/FlappyBird/` (inside the plugin), foll
 
 ## Input strategy
 
-Use **legacy axis/action mappings** in the host project's `Config/DefaultInput.ini` rather than Enhanced Input. Reason: Enhanced Input requires `Input Action` / `Input Mapping Context` `.uasset` files, which only the human can author in-editor. Legacy keeps input fully in Claude's lane. If we want Enhanced Input later, it becomes a polish-pass tutorial.
+Use **legacy axis/action mappings** rather than Enhanced Input. Reason: Enhanced Input requires `Input Action` / `Input Mapping Context` `.uasset` files, which only the human can author in-editor. Legacy keeps input fully in Claude's lane. If we want Enhanced Input later, it becomes a polish-pass tutorial.
+
+The plugin ships its own action mapping at `Plugins/Agility/Config/DefaultInput.ini` — UE merges plugin config additively into the host project's `[/Script/Engine.InputSettings]`, so a fresh host project that enables Agility gets the `Agility.FlappyBird.Flap` action (SpaceBar + LMB) for free. Action names are namespaced (`Agility.<Feature>.<Action>`) so they group under an "Agility" subtree in Project Settings → Input and can't collide with the host project's own mappings.
 
 ## Parts
 
@@ -20,7 +22,7 @@ Use **legacy axis/action mappings** in the host project's `Config/DefaultInput.i
 
 **Deliverable:** A procedural bird falls under gravity in an empty scene; pressing Space gives it an upward impulse. Side-on camera view.
 
-- **Claude (C++):** `AFlappyBird` pawn with a procedural mesh; gravity + velocity in `Tick`; `Flap` action bound to Space; `AFlappyBirdGameMode` setting the default pawn; camera component on the pawn (side-on); input mappings in `DefaultInput.ini`.
+- **Claude (C++):** `AFlappyBird` pawn with a procedural mesh; gravity + velocity in `Tick`; `Agility.FlappyBird.Flap` action bound to Space + LMB (mapping shipped by the plugin via `Plugins/Agility/Config/DefaultInput.ini`); `AFlappyBirdGameMode` setting the default pawn; camera component on the pawn (side-on).
 - **Human (editor):** Open / create the Flappy Bird level; set the GameMode override in World Settings; press Play and confirm the bird falls + flaps.
 
 **What we learned, refined in the build:**
@@ -104,7 +106,7 @@ Now that the camera is fixed and the player can see when the bird is about to go
 - `Source/Agility/FlappyBird/FlappyBirdHUD.{h,cpp}` — DrawHUD score text
 - `Source/Agility/FlappyBird/PipePair.{h,cpp}` — procedural pipe pair, hit boxes, score trigger, double-sided tube band
 - `Source/Agility/FlappyBird/PipeSpawner.{h,cpp}` — timer-based pipe spawner
-- Host project's `Config/DefaultInput.ini` — `Flap` action mappings (SpaceBar + LMB)
+- `Plugins/Agility/Config/DefaultInput.ini` — `Agility.FlappyBird.Flap` action mappings (SpaceBar + LMB), shipped by the plugin so no host-project config is needed
 - `Docs/tutorials/flappybird/00-scope.md` — this doc
 
 All files left unstaged per project rule.
@@ -116,7 +118,7 @@ Things we're explicitly trying to learn / confirm while building, so the tutoria
 - Live Coding round-trip time for additive C++ changes (new actors, new components) vs. when a full editor restart is needed.
 - How smooth the C++ ↔ editor handoffs feel in practice (and whether the "request, don't fake" rule needs tightening).
 - Whether procedural meshes + `DrawHUD` are enough for a feel-good prototype, or if we hit walls that need editor assets.
-- Any pain points in input setup via `DefaultInput.ini` that would trip up a new reader.
+- Any pain points in input setup. Note: action mappings are now plugin-shipped (`Plugins/Agility/Config/DefaultInput.ini`) so a new reader shouldn't have to touch their own project's input config to play the game — but they'll still need to learn the legacy-vs-Enhanced-Input distinction if they build their own controller.
 
 ## Part 6 — kollie port (in progress, started 2026-05-17)
 
