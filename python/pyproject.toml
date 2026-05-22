@@ -4,7 +4,9 @@ version = "0.0.0"
 description = "Python-side research code for the Agility UE plugin — computer-vision experiments and (planned) web server."
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.136.1",
     "opencv-python>=4.10",
+    "uvicorn[standard]>=0.47.0",
 ]
 
 [tool.uv]

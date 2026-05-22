@@ -19,7 +19,7 @@ Either way, the algorithm work happens here first. See [`experiments/README.md`]
 ```
 python/
   README.md                  # this file
-  pyproject.toml             # shared deps for experiments and the (planned) server
+  pyproject.toml             # shared deps for experiments and the server
   uv.lock                    # pinned dep versions; committed for reproducibility
   .python-version            # interpreter version pin (3.12)
   experiments/               # local CV scripts, no API, no UE involvement
@@ -27,7 +27,9 @@ python/
     video-playback/          # first example: OpenCV plays the bundled video
       main.py
       README.md
-  server/                    # (planned) the web server UE5 talks to
+  server/                    # the web server UE5 talks to (FastAPI)
+    README.md                # how to run, bind-address policy, current endpoints
+    main.py                  # FastAPI app — single GET /hello endpoint for now
   shared/                    # (planned) utilities promoted once they have real reuse
 ```
 
