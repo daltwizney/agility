@@ -33,3 +33,18 @@ Intermediate/
 *.exe
 *.out
 *.app
+
+# Python (see python/ for the CV research workspace)
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.env.local
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/

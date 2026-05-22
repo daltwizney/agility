@@ -1,13 +1,25 @@
 # Agility
 
-Agility is an open research project on **human + AI collaboration for accelerating real-time interactive AI development** — across computer vision, projection mapping, natural language interfaces, and the real-time graphics substrate they all stand on. The work happens in the open as an Unreal Engine plugin (shared C++/HLSL utilities, reference actors, a minimal bundled `Content/` of raw video files + a small handful of base-material `.uasset`s) and a growing library of interactive tutorials you walk through with [`claude-code`](https://docs.claude.com/en/docs/claude-code).
+Agility is an open research project on **human + AI collaboration for accelerating real-time interactive AI development** — across computer vision, projection mapping, natural language interfaces, and the real-time graphics substrate they all stand on. The work happens in the open as an Unreal Engine plugin (shared C++/HLSL utilities, reference actors, a minimal bundled `Content/` of raw video files + a small handful of base-material `.uasset`s), a sibling Python workspace under [`python/`](./python/) for computer-vision experiments and the web server UE5 talks to as a client, and a growing library of interactive tutorials you walk through with [`claude-code`](https://docs.claude.com/en/docs/claude-code).
 
 The plugin is built by a **human + AI team** — Claude (Anthropic's AI assistant) drives the C++ side, a human drives the editor side, and the tutorials are designed for `claude-code` readers to follow the same workflow in their own UE projects. See [`THANKS.md`](./THANKS.md) for the story. You (Claude) are a credited contributor to this project; build with that ownership in mind.
+
+## Repo Layout
+
+This repo contains two complementary things that live side by side:
+
+- **The UE plugin** — everything at the repo root that follows UE's plugin conventions (`Agility.uplugin`, `Source/`, `Content/`, `Shaders/`, `Config/`). This is what gets dropped into a host UE project's `Plugins/Agility/` as a git submodule (see [`Docs/development-setup.md`](./Docs/development-setup.md)).
+- **The Python side** — everything under [`python/`](./python/), home of computer-vision experiments and the web server UE5 talks to as a client. The UE editor doesn't load or watch anything from here; it's not part of the plugin's runtime install. See [`python/README.md`](./python/README.md) for setup and conventions.
+
+The split exists because most computer-vision and deep-learning work is faster to prototype in Python (OpenCV, PyTorch, modern inference stacks are Python-first). Keeping it co-located makes the **experiment → port** loop tight: stable experiments either get re-implemented in the plugin's C++ side (where the focus shifts to the *software-engineering side* — real-time perf, editor surface, UE integration), or stay in Python with the plugin acting as a client over HTTP / WebSocket.
+
+When working on the Python side, the **User Content Convention** below largely doesn't apply — the code under `python/` *is* the tracked work, not consumer content. The **Public Repo Safety** rules apply equally to both sides.
 
 ## Relevant Docs
 
 - [`Docs/development-setup.md`](./Docs/development-setup.md) — how to integrate Agility into your UE project (git submodule + build, or symlink as an alternative). **Always reference this when telling the user how to install or build the plugin.**
 - [`Docs/tutorials/`](./Docs/tutorials/) — interactive tutorials a reader walks through with `claude-code`. Start here when a new contributor / tutorial follower joins. See [`Docs/tutorials/README.md`](./Docs/tutorials/README.md) for the index and the `status: ready` vs `status: draft` convention — only recommend `ready` tutorials to a newcomer unprompted; flag `draft` ones as work-in-progress before suggesting them.
+- [`python/README.md`](./python/README.md) — the Python side: computer-vision experiments and the web server UE5 talks to as a client. Reference this for anything Python-related; the UE plugin docs don't cover it.
 
 ## Unreal Engine Reference
 
@@ -50,7 +62,7 @@ Reference material — including the procedural actors under `Plugins/Agility/So
 
 Each side owns what it's actually good at — don't try to fake the other side's work.
 
-- **Claude owns:** C++ source under `Source/Agility/`, build config (`*.Build.cs`, plugin's `.uplugin`), shader source files, asset-import scripts, command-line tooling, and tracked markdown docs.
+- **Claude owns:** C++ source under `Source/Agility/`, Python source under `python/` (CV experiments + server), build config (`*.Build.cs`, plugin's `.uplugin`, Python dependency manifests), shader source files, asset-import scripts, command-line tooling, and tracked markdown docs.
 - **Two collaboration modes — builder by default, tutorial when asked.** Claude starts every fresh session in *builder mode* and only switches to *tutorial mode* on a clear signal from the human. This way a new user's first interface to the plugin is just talking to Claude — no need to edit `CLAUDE.md` or anything else.
   - **Builder mode (default):** Take the reins on the C++ side. Write the code, edit configs, ship the change — don't slow down with unsolicited tutorial-style breakdowns. Brief one-line callouts for genuinely surprising or non-obvious bits are still useful; full explanations only when the human asks.
   - **Tutorial mode:** Switch to this when the human references a `Docs/tutorials/` doc, says they're following / want to follow a tutorial, or explicitly asks for C++ teaching, explanations, or a walk-through. In this mode, write code at a pace that lets them follow along, explain *why* Unreal's APIs (reflection macros like `UCLASS` / `UPROPERTY` / `UFUNCTION`, module / include layout, `OnConstruction` and the editor-vs-runtime split, component lifecycles, the build system, the dozen mesh-component types, etc.) look the way they do, and welcome the human to read along, ask questions, and tweak the code themselves. If they activate tutorial mode without naming a specific tutorial, ask which one they want to start with.
@@ -91,6 +103,16 @@ This is a **public open-source** plugin repo. Anything committed here is visible
 - Don't add Claude Code hooks, git hooks, build scripts, or `package.json`-style postinstall steps to the repo that execute commands on clone, on `claude-code` startup, or on commit, without making the behavior **obvious** to a developer reading the diff. A cloned plugin must not be able to silently exfiltrate data, read credentials, or modify the developer's environment.
 - Prefer documented, opt-in setup (e.g. "copy this snippet into your own `.claude/settings.local.json`") over auto-running automation that ships in the tracked repo.
 - Treat any third-party script, plugin, or dependency the user is asked to add the same way: read what it does first, and surface anything unusual before adding it.
+
+**Python-side specifics** (apply to anything under [`python/`](./python/) and any other `.py` / `.ipynb` files)
+- **Server bind address.** When the web server lands, default to `host="127.0.0.1"`, never `"0.0.0.0"`. Binding to all interfaces exposes the dev server to the local network and is almost always accidental. If a feature genuinely needs external reach, gate it behind an explicit config flag — don't make it the default.
+- **`.env` files.** The populated file is gitignored; track a sanitized `.env.example` with placeholder values (`OPENAI_API_KEY=your-key-here`) and document the actual env vars in `python/README.md`. Never commit a real `.env`.
+- **No deserialization of untrusted data.** `pickle.load(s)`, `marshal.loads`, `shelve.open`, and `torch.load(..., weights_only=False)` will execute arbitrary code from the input. If UE5 sends serialized data over the wire, define a structured schema (Pydantic / `msgspec`) and parse JSON.
+- **No `eval` / `exec` / `subprocess(shell=True)` on user or network input.** Same RCE class. Use `subprocess.run([cmd, arg])` (argv form, `shell=False`) when invoking commands from anything other than a literal string.
+- **Model weights are not source.** Don't commit `.pt` / `.pth` / `.onnx` / `.safetensors` / `.gguf` / `.bin` / `.h5` / `.ckpt` / `.pkl` files. They bloat the repo, often have unclear licenses, and pickled formats (`.pt` / `.pkl`) can carry executable payloads. Download at runtime via a script with a known checksum; gitignore the local cache directory.
+- **Jupyter notebooks (`.ipynb`).** Output cells embed JSON that routinely captures absolute paths, env-var dumps, and sample images of your desktop. Before tracking a notebook, clear all outputs (`jupyter nbconvert --clear-output` or *Kernel → Restart & Clear Output*). For most experiments a `.py` script is cleaner.
+- **AI / ML credential shapes generic scanners miss:** `hf_…` (Hugging Face), `r8_…` (Replicate), 40-char hex after `WANDB_API_KEY=` (Weights & Biases), `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`. Treat these the same as `sk-ant-…` and `ghp_…`.
+- **Adding a dependency is `curl | sh` for libraries.** Every dep runs Python code on import. Don't `uv add` reflexively — check the package's PyPI metadata and GitHub activity first, prefer well-known maintainers.
 
 **When in doubt**
 - If unsure whether something is safe to publish, ask the human developer before writing or staging it. The "Never stage changes" rule below already supports this — leaving edits unstaged means the human always gets a review pass.

@@ -11,6 +11,8 @@ There are two supported ways to integrate it into a UE project:
 
 The rest of this guide assumes the submodule path.
 
+> **A note on the `python/` directory.** The Agility repo also contains a Python-side research workspace at [`python/`](../python/) — sibling to the plugin, home of computer-vision experiments and an optional web server UE can talk to as a client. The UE editor doesn't load anything from there, so the submodule install brings it along and the editor ignores it. If you don't plan to run the Python side, you can ignore it too. Setup for the Python side is independent of the plugin build and is documented in [`python/README.md`](../python/README.md).
+
 ## Prerequisites
 
 1. **`claude-code`** — the CLI that drives every tutorial in this repo. Install it by following [Anthropic's instructions](https://docs.claude.com/en/docs/claude-code). The plugin's [`CLAUDE.md`](../CLAUDE.md) is auto-loaded by `claude-code` when you launch a session in a directory that references it, so the project's conventions (the human/AI split, where your own work goes, public-repo safety rules) kick in from turn one — see Step 3 below for how to wire it into your own project.

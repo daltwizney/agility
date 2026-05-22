@@ -19,6 +19,14 @@ This is a public open-source repo. Run a full audit of every git-tracked file ag
    - Personal identity (emails, full names, GitHub handles, Apple IDs, hostnames, MAC addresses, local IPs like `192.168.x.x` / `10.x.x.x` / `172.16-31.x.x`)
    - Build artifacts that leak local paths and shouldn't be tracked (anything under `Binaries/`, `Intermediate/`, `Saved/`, `DerivedDataCache/`, `.idea/`, `.vs/`; generated IDE projects like `*.xcodeproj`, `*.xcworkspace`, `*.sln`)
    - Hooks/scripts that auto-execute on clone or startup without obvious intent (Claude Code hooks, git hooks, `postinstall` scripts, etc.)
+   - **Python-specific** (apply to `python/` and any other `.py` / `.ipynb` / `pyproject.toml` files; mirrors the "Python-side specifics" block in CLAUDE.md):
+     - Tracked `.env` files — only sanitized `.env.example` should ever be tracked.
+     - Tracked model weights / large binaries: file extensions `.pt`, `.pth`, `.onnx`, `.safetensors`, `.gguf`, `.bin`, `.h5`, `.ckpt`, `.pkl` (belong in a download-on-first-run cache, not the repo).
+     - Server bind addresses to `0.0.0.0` in tracked Python code (`host="0.0.0.0"`, `--host 0.0.0.0`, uvicorn / FastAPI startup args, etc.) — flag for human review; almost always accidental.
+     - Jupyter notebooks (`.ipynb`) with non-empty `outputs` arrays — output cells leak absolute paths, env-var dumps, and embedded screenshots; flag for clearing before commit.
+     - Python cache / build artifacts that slipped past `.gitignore`: `__pycache__/`, `*.pyc`, `*.pyo`, `.venv/`, `venv/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `*.egg-info/`, `.ipynb_checkpoints/`.
+     - AI / ML credential shapes the generic patterns miss: `hf_…` (Hugging Face), `r8_…` (Replicate), 40-char hex following `WANDB_API_KEY=` (Weights & Biases), `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET`.
+     - Code patterns that are secure-coding red flags rather than leaks — flag for human review with severity MEDIUM: `pickle.load`/`pickle.loads`/`marshal.loads`/`shelve.open`/`torch.load(..., weights_only=False)` reading from request bodies, file uploads, or network sockets; `eval(`/`exec(`/`subprocess.run(..., shell=True)` with non-literal arguments.
 
 4. **Honor the acknowledged exceptions** (don't flag as issues — mention as informational only if directly relevant):
    - `/Users/Shared/Epic Games/UE_<version>/...` — engine install paths are identical across machines.
