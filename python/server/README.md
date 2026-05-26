@@ -32,6 +32,14 @@ The plugin ships an `AAgilityHelloProbe` actor under `Source/Agility/Server/` th
 ## Endpoints
 
 - `GET /hello` — sanity-check endpoint. Returns `{"message": "hello agility"}`.
+- `POST /video/restart` — seeks the UDP video stream to frame 0 and (re)starts it. Returns `{"status": "restarted", "width": W, "height": H, "udp_host": ..., "udp_port": ...}` so clients can size their display target before the first frame lands.
+- `POST /video/stop` — pauses the UDP stream. Call `/video/restart` to resume.
+
+## Video stream
+
+A background `VideoStreamer` thread reads frames from `server/data/Wizney_Labs_Logo_Animation_Generated.mp4` with OpenCV, resizes to fit `max_dim=640`, JPEG-encodes (quality 70), and pushes each frame as a single UDP datagram to `127.0.0.1:8001`. One datagram per frame keeps the wire format trivial — the receiver just decodes the bytes as JPEG. This relies on localhost's large MTU; over a real network you'd need chunking.
+
+The streamer auto-starts when uvicorn boots and shuts down cleanly on exit. The UE5 side is `AAgilityServerVideoQuad` — drag it into a map, hit Play with the server running, and it should display the streamed video on a procedurally generated quad sized to the source frame's aspect ratio.
 
 ## Adding more endpoints
 

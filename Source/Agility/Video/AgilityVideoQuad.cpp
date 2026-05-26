@@ -112,7 +112,10 @@ void AAgilityVideoQuad::BuildQuad()
 	TArray<FVector> Vertices = { A, B, C, D };
 	TArray<int32> Triangles = { 0, 2, 1, 0, 3, 2 };
 	TArray<FVector> Normals = { FVector::ForwardVector, FVector::ForwardVector, FVector::ForwardVector, FVector::ForwardVector };
-	TArray<FVector2D> UV0 = { FVector2D(0, 0), FVector2D(1, 0), FVector2D(1, 1), FVector2D(0, 1) };
+	// Vertex A sits at world -Y, which is the viewer's RIGHT when looking at
+	// the +X-facing front (UE is left-handed). Texture column 0 needs to land
+	// at the viewer's left, so A gets UV (1, 0) and B (at +Y) gets UV (0, 0).
+	TArray<FVector2D> UV0 = { FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1), FVector2D(1, 1) };
 	TArray<FProcMeshTangent> Tangents = {
 		FProcMeshTangent(0.0f, 1.0f, 0.0f),
 		FProcMeshTangent(0.0f, 1.0f, 0.0f),

@@ -15,7 +15,9 @@ public class Agility : ModuleRules
 		// AudioMixer: USynthComponent (UMediaSoundComponent's parent) lives here — SetVolumeMultiplier needs it linked.
 		// HTTP: FHttpModule + IHttpRequest for AAgilityHelloProbe (and future python/server/ clients).
 		// Json: FJsonObject + TJsonReader for parsing server responses.
-		PrivateDependencyModuleNames.AddRange(new string[] { "Projects", "RenderCore", "MediaAssets", "AudioMixer", "HTTP", "Json" });
+		// Sockets + Networking: FUdpSocketBuilder + FUdpSocketReceiver for AAgilityServerVideoQuad's UDP listener.
+		// ImageWrapper: JPEG decode for UDP-received video frames.
+		PrivateDependencyModuleNames.AddRange(new string[] { "Projects", "RenderCore", "MediaAssets", "AudioMixer", "HTTP", "Json", "Sockets", "Networking", "ImageWrapper" });
 
 		// Stage raw video files (Content/Movies/*.mp4) into packaged builds. UE auto-stages .uasset content,
 		// but raw files in a plugin's Content/Movies/ need to be declared explicitly.
