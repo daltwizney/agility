@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Agility Android UPL: adds Kotlin + Jetpack Compose to Unreal's generated gradle build and
+  overlays a ComposeView on top of GameActivity's rendered surface.
+
+  Verified against UE 5.7 (Gradle 8.7, AGP 8.6.1, Java 17). Version numbers below are first-build
+  candidates — bump them if gradle resolution complains on the first device package.
+-->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<init>
+		<log text="Agility Compose UPL init"/>
+	</init>
+
+	<!-- Kotlin + Compose-compiler gradle plugins on the buildscript classpath (root build.gradle). -->
+	<buildscriptGradleAdditions>
+		<insert>dependencies {
+	classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21'
+	classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.0.21'
+}
+</insert>
+	</buildscriptGradleAdditions>
+
+	<!-- Apply the plugins, turn on Compose, and pull in the Compose dependencies (app build.gradle). -->
+	<buildGradleAdditions>
+		<insert>apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+android {
+	buildFeatures {
+		compose true
+	}
+	kotlinOptions {
+		jvmTarget = '17'
+	}
+}
+
+dependencies {
+	def composeBom = platform('androidx.compose:compose-bom:2024.09.00')
+	implementation composeBom
+
+	implementation 'androidx.compose.ui:ui'
+	implementation 'androidx.compose.material3:material3'
+	implementation 'androidx.activity:activity-compose:1.9.2'
+	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
+	implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6'
+	implementation 'androidx.savedstate:savedstate-ktx:1.2.1'
+}
+</insert>
+	</buildGradleAdditions>
+
+	<!-- Copy the Kotlin sources into the generated project's java source root (same target Firebase uses). -->
+	<!-- $S(PluginDir) is the directory containing THIS UPL file (Source/Agility/Android), not the plugin root. -->
+	<prebuildCopies>
+		<copyDir src="$S(PluginDir)/java" dst="$S(BuildDir)/src"/>
+	</prebuildCopies>
+
+	<!-- Hook the Compose host into GameActivity's lifecycle. -->
+	<gameActivityImportAdditions>
+		<insert>import com.wizneylabs.agility.AgilityComposeHost;</insert>
+	</gameActivityImportAdditions>
+
+	<gameActivityOnCreateAdditions>
+		<insert>AgilityComposeHost.attach(this);</insert>
+	</gameActivityOnCreateAdditions>
+
+	<gameActivityOnStartAdditions>
+		<insert>AgilityComposeHost.onStart();</insert>
+	</gameActivityOnStartAdditions>
+
+	<gameActivityOnResumeAdditions>
+		<insert>AgilityComposeHost.onResume();</insert>
+	</gameActivityOnResumeAdditions>
+
+	<gameActivityOnPauseAdditions>
+		<insert>AgilityComposeHost.onPause();</insert>
+	</gameActivityOnPauseAdditions>
+
+	<gameActivityOnStopAdditions>
+		<insert>AgilityComposeHost.onStop();</insert>
+	</gameActivityOnStopAdditions>
+
+	<gameActivityOnDestroyAdditions>
+		<insert>AgilityComposeHost.onDestroy();</insert>
+	</gameActivityOnDestroyAdditions>
+
+</root>

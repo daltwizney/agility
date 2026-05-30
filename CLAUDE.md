@@ -20,6 +20,7 @@ When working on the Python side, the **User Content Convention** below largely d
 - [`Docs/development-setup.md`](./Docs/development-setup.md) — how to integrate Agility into your UE project (git submodule + build, or symlink as an alternative). **Always reference this when telling the user how to install or build the plugin.**
 - [`Docs/tutorials/`](./Docs/tutorials/) — interactive tutorials a reader walks through with `claude-code`. Start here when a new contributor / tutorial follower joins. See [`Docs/tutorials/README.md`](./Docs/tutorials/README.md) for the index and the `status: ready` vs `status: draft` convention — only recommend `ready` tutorials to a newcomer unprompted; flag `draft` ones as work-in-progress before suggesting them.
 - [`python/README.md`](./python/README.md) — the Python side: computer-vision experiments and the web server UE5 talks to as a client. Reference this for anything Python-related; the UE plugin docs don't cover it.
+- [`Docs/design/compose-ui-style.md`](./Docs/design/compose-ui-style.md) — the standard sci-fi HUD style for Compose UI overlaid on the Unreal surface (Android). Build new overlays from the `AgilityComposeTheme.kt` design system; reference this before adding Compose UI.
 
 ## Unreal Engine Reference
 

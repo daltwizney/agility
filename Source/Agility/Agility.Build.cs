@@ -22,5 +22,16 @@ public class Agility : ModuleRules
 		// Stage raw video files (Content/Movies/*.mp4) into packaged builds. UE auto-stages .uasset content,
 		// but raw files in a plugin's Content/Movies/ need to be declared explicitly.
 		RuntimeDependencies.Add(Path.Combine(PluginDirectory, "Content", "Movies", "*.mp4"), StagedFileType.NonUFS);
+
+		// Android-only: attach the UPL that wires Kotlin + Jetpack Compose into UE's generated gradle build
+		// and overlays a ComposeView on GameActivity's surface. See Source/Agility/Compose/AgilityComposeOverlay.cpp
+		// for the C++ side of the JNI bridge (which compiles to no-ops on every other platform).
+		if (Target.Platform == UnrealTargetPlatform.Android)
+		{
+			AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(ModuleDirectory, "Android", "Agility_UPL_Android.xml"));
+
+			// FAndroidApplication::GetJavaEnv() for the JNI bridge in Compose/AgilityComposeOverlay.cpp.
+			PrivateDependencyModuleNames.Add("ApplicationCore");
+		}
 	}
 }
