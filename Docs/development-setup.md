@@ -18,6 +18,7 @@ The rest of this guide assumes the submodule path.
 1. **`claude-code`** — the CLI that drives every tutorial in this repo. Install it by following [Anthropic's instructions](https://docs.claude.com/en/docs/claude-code). The plugin's [`CLAUDE.md`](../CLAUDE.md) is auto-loaded by `claude-code` when you launch a session in a directory that references it, so the project's conventions (the human/AI split, where your own work goes, public-repo safety rules) kick in from turn one — see Step 3 below for how to wire it into your own project.
 2. **A UE C++ project under git.** Agility is a C++ plugin, so you need a project that already builds C++ (i.e. created with a "C++" template, or already has a `Source/` directory and a working `.uproject` with at least one module). A Blueprints-only project will need to be converted to C++ first (UE editor → Tools → "New C++ Class…" creates the Source tree). Submodules also require the parent project to be a git repo — if you haven't run `git init` in it yet, do that first.
 3. **Unreal Engine** — installed via the Epic Games Launcher. The plugin has been developed against **UE 5.7** and should work on adjacent versions. Confirm your project's engine version via the `EngineAssociation` field in your project's `.uproject`.
+   - **Install the target-platform components you'll build for, up front.** In the Epic Games Launcher → *Unreal Engine → Library*, click the dropdown (⌄) on your engine version's tile → *Options*, and check the target platforms you want under **Target Platforms** (e.g. **Android**) before clicking *Apply*. These ship the per-platform build templates the engine copies into your project — without them, *Project Settings → Platforms → Android → Configure Now* fails with `Could not overwrite Project Properties file`, because the source template at `Engine/Build/Android/Java/project.properties` doesn't exist. Adding **Android** here lets you configure Android packaging and build Android targets even while developing in-editor on macOS. (The Android device toolchain — Android Studio / NDK — is a separate setup step covered in [Building for Android devices](#building-for-android-devices) below, only needed when you actually package and deploy to a device.)
 4. **A C++ IDE for UE development** — on macOS we recommend [**JetBrains Rider**](https://www.jetbrains.com/rider/) (built-in UE support, no Epic-Launcher project-file generation needed). On Windows, Visual Studio (2022+) works the same way through its UE integration. Pick whichever is comfortable on your platform.
 5. **Platform toolchain** — on macOS, the full Xcode SDK plus accepting the license is required for the underlying toolchain even if you don't open Xcode (`xcode-select --install` + `sudo xcodebuild -license accept`). On Windows, the Visual Studio "Game development with C++" workload covers it.
 
@@ -111,6 +112,49 @@ One thing to internalize before you open it: **the tutorials are conversation st
 - **Live Coding** is available from inside the running editor for fast iteration on small C++ changes — the keyboard shortcut is `Ctrl+Alt+F11` by default. Live Coding cannot bootstrap a module that has zero compiled classes, and it can't pick up `Build.cs` changes, so those still require a full IDE build.
 - **Adding new C++ files** — when you create new `.h` / `.cpp` files (either in the plugin tree or in your project's source tree), your IDE should pick them up automatically. If a new file isn't recognized, refresh the project model (Rider: *Tools → Unreal → Refresh Project*).
 - **Don't commit `.xcodeproj` / `.xcworkspace` / `.sln` files.** They embed absolute paths from the developer's machine, are listed in the plugin's `.gitignore`, and are not needed when working through Rider or VS directly.
+
+## Building for Android devices
+
+The Epic-Launcher **Android target platform** (Prerequisites step 3) is enough to *configure* Android packaging and build in-editor on macOS. Actually deploying to a device or emulator additionally needs the Android **device toolchain** — an SDK, an NDK, and a JDK — plus telling Unreal where they live.
+
+### Install the toolchain
+
+The simplest source for all three is **[Android Studio](https://developer.android.com/studio)**, which bundles an SDK manager and a compatible JDK (its JBR):
+
+1. Install Android Studio.
+2. In its SDK Manager, install the **Android SDK** and **command-line tools**. By default these land at `~/Library/Android/sdk` on macOS.
+3. Install the **NDK version Unreal expects**. UE pins this per engine version in `Engine/Config/Android/Android_SDK.json` (`MainVersion` / `MinVersion` / `MaxVersion`); for UE 5.7 that's **NDK r27c** (`27.2.12479018`). Installing a different major version is the most common reason the Android SDK shows up as *Invalid* in the editor. The NDK installs under `~/Library/Android/sdk/ndk/<version>`.
+
+### Point Unreal at the toolchain
+
+Unreal needs three paths — the SDK, the NDK, and a JDK. There are two ways to supply them, and the choice matters if you launch the editor from an IDE.
+
+**Recommended — the editor's Android SDK settings page.** Open *Project Settings → Platforms → Android SDK* and fill in:
+
+- **Location of Android SDK** — `~/Library/Android/sdk`
+- **Location of Android NDK** — `~/Library/Android/sdk/ndk/<version>`
+- **Location of JAVA** — Android Studio's bundled JDK, `/Applications/Android Studio.app/Contents/jbr/Contents/Home`
+
+(These fields don't expand `~` — browse to, or paste, the resolved absolute path.)
+
+This is the most robust option for two reasons:
+
+- These settings are `globaluserconfig` — Unreal stores them in your **machine-global** Epic config (`~/Library/Application Support/Epic/UnrealEngine/<version>/Saved/Config/`), **not** in the project's tracked `Config/`. So filling in absolute paths here leaks nothing into a shared repo; each teammate just sets their own once.
+- Saving the page pushes the paths into the **running editor's environment** and immediately refreshes device detection — so it works regardless of how the editor was launched.
+
+That last point matters because a **GUI-launched editor (e.g. from Rider, or the Epic Launcher) does not inherit your shell environment** — any `ANDROID_HOME` / `NDKROOT` / `JAVA_HOME` you export in `~/.zshrc` or `~/.zprofile` won't be visible to it. The settings page sidesteps that entirely.
+
+**Alternative — environment variables.** If you leave the settings-page fields blank, Unreal falls back to the `ANDROID_HOME` (SDK), `NDKROOT` (NDK), and `JAVA_HOME` (JDK) environment variables. This keeps absolute paths out of even your local config, but only works for an editor that actually inherits those variables — one launched from a terminal where they're set, not from a GUI app. If you go this route, `JAVA_HOME` must point at a real JDK *image* (a directory containing a `release` file), not a bare keg/symlink, and the JDK must be version 17+.
+
+Either way, you can confirm the toolchain is healthy in *Project Settings → Platforms → Android SDK* — a valid setup reports the SDK as found. Until it's valid, the **Android platform category won't appear** in the editor's *Platforms* dropdown, and no devices will be listed under it.
+
+### Deploy and iterate
+
+With the toolchain configured and a device connected (USB debugging enabled and authorized) — or an emulator running — the device appears under *Platforms → Android*, and **Launch** deploys to it. A few things worth knowing about iteration time:
+
+- **Emulator vs. physical device is the same build.** The expensive work — compiling UE C++ to native `.so` libraries, cooking content, packaging the APK — is keyed to the target **architecture**, not the destination. An emulator on an Apple-Silicon Mac is arm64, the same as a modern physical device, so it receives an identical binary; deploying to an emulator does **not** save build time. (An x86_64 emulator on an Intel Mac is a *different* arch — an extra compile, not a faster one.)
+- **What rebuilds depends on what you changed.** Editing UE C++ triggers the native `.so` recompile (the slow path); editing content re-cooks (iterative cooking only re-cooks changed assets); editing only the Java/Kotlin/Gradle layer (e.g. native Android UI) skips the UE recompile and cook entirely, so it's much faster.
+- **Use Launch, not Package Project, for iteration.** *Launch on device* does an iterative cook and pushes only changed files; *Package Project* is for producing a distributable build.
 
 ## Platform notes
 
